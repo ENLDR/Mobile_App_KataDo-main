@@ -42,11 +42,17 @@ public class TempEditVideoActivity extends AppCompatActivity {
                             result -> {
                                 if (result.getResultCode() == Activity.RESULT_OK &&
                                         result.getData() != null) {
-                                    Uri uri = Uri.parse(TrimVideo.getTrimmedVideoPath(result.getData()));
-                                    Log.d(TAG, "Trimmed path:: " + uri);
+                                    Uri trimmedUri = Uri.parse(TrimVideo.getTrimmedVideoPath(result.getData()));
+                                    Log.d(TAG, "Trimmed path:: " + trimmedUri);
 
-                                } else
+                                    // Start ProcessingActivity with the trimmed video URI
+                                    Intent processingIntent = new Intent(TempEditVideoActivity.this, ProcessingActivity.class);
+                                    processingIntent.setData(trimmedUri);
+                                    startActivity(processingIntent);
+                                    finish(); // Close the current activity
+                                } else {
                                     LogMessage.v("videoTrimResultLauncher data is null");
+                                }
                             }));
         } else {
             Toast.makeText(this, "No video URI received", Toast.LENGTH_LONG).show();

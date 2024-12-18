@@ -3,6 +3,7 @@ package com.example.finalproject;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Filter;
 import android.widget.ImageView;
@@ -15,6 +16,10 @@ import android.widget.VideoView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.finalproject.interfaces.VideoResponse;
+import com.example.finalproject.models.Video;
+import com.example.finalproject.services.MangerService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,16 +47,39 @@ public class Guide_video_Activity extends AppCompatActivity implements VideoAdap
         videoView = findViewById(R.id.videoView);
         homeButton = findViewById(R.id.homebtn);
 
-        // Set up RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // Initialize the video list and adapter
         videoList = new ArrayList<>();
-        videoList.add(new VideoItem("Video 1", "android.resource://" + getPackageName() + "/" + R.raw.video1, "thumbnail_url_1"));
-        videoList.add(new VideoItem("Video 2", "android.resource://" + getPackageName() + "/" + R.raw.video2, "thumbnail_url_2"));
-        videoList.add(new VideoItem("Video 3", "android.resource://" + getPackageName() + "/" + R.raw.video3, "thumbnail_url_3"));
         adapter = new VideoAdapter(this, videoList);
 
-        adapter.setClickListener(this);
+        // Set the adapter to the RecyclerView
         recyclerView.setAdapter(adapter);
+
+        // Fetch videos using the MangerService
+        MangerService mangerService = new MangerService();
+        mangerService.getGuideVideos(new VideoResponse() {
+            @Override
+            public void onSuccess(List<Video> ListVideo) {
+                Log.i("Load", "Successful");
+
+                // Clear the existing videoList
+                videoList.clear();
+
+                // Convert ListVideo to VideoItem and add to videoList
+                for (Video video : ListVideo) {
+                    videoList.add(new VideoItem(video.getV_Name(), video.getURL(), video.getTURL()));
+                }
+
+                // Notify the adapter about data changes
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                Log.e("Load", "Failed to load videos", t);
+            }
+        });
 
         // Set up SearchView
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -76,9 +104,9 @@ public class Guide_video_Activity extends AppCompatActivity implements VideoAdap
                         }
                     }
                 });
-  return true;
+                return true;
             }
-});
+        });
 
         homeButton.setOnClickListener(new View.OnClickListener() {
             @Override
